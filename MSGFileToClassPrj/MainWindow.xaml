@@ -1,0 +1,19 @@
+﻿<Window x:Class="MSGFileToClassPrj.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:MSGFileToClassPrj"
+        xmlns:forms="clr-namespace:System.Windows.Forms;assembly=System.Windows.Forms"
+        xmlns:wfi="clr-namespace:System.Windows.Forms.Integration;assembly=WindowsFormsIntegration"
+        xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="350" Width="525">
+    <Grid>
+        <Button Width="100" Height="30" Margin="100,10,300,0" Click="Button_Click" Content="불러오기" VerticalAlignment="Top"/>
+        <Button Width="100" Height="30" Margin="300,10,100,0" Click="Btn_byteSave_Click" Content="저장" VerticalAlignment="Top"/>
+        <TextBox Margin="0,50,0,0" x:Name="result"/>
+        <!--<wfi:WindowsFormsHost Margin="0,50,0,0" Name="windowsFormsHost" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>-->
+        <RichTextBox Margin="0,50,0,0" x:Name="myRichTextBox" VerticalScrollBarVisibility="Auto" />
+    </Grid>
+</Window>
