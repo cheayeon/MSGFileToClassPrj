@@ -112,7 +112,7 @@ namespace MSGFileToClassPrj
         private bool LoadRtfIntoRichTextBox(MSGMessageModel message)
         {
             try
-            {
+            { 
                 string MSGTempPath = tempPath + "\\" + Guid.NewGuid().ToString();
                 Directory.CreateDirectory(MSGTempPath);
                 TextReader stringReader = new StringReader(message.BodyRTF);
