@@ -1,4 +1,5 @@
-﻿using MSGFileToClassPrj.Models;
+﻿using Microsoft.Web.WebView2.Core;
+using MSGFileToClassPrj.Models;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -26,11 +27,31 @@ namespace MSGFileToClassPrj
     {
         List<MSGMessageModel> msgFiles = new List<MSGMessageModel>();
 
+        public string tempPath { get; private set; }
+
+        List<string> OpenMSGFilesPaths = new List<string>();
+
+        public string html;
+
         public MainWindow()
         {
             InitializeComponent();
 
-            //windowsFormsHost.Child = new System.Windows.Forms.RichTextBox();
+            tempPath = System.IO.Path.Combine(
+                                        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                                        "Temp",
+                                        System.AppDomain.CurrentDomain.FriendlyName.Substring(0, System.AppDomain.CurrentDomain.FriendlyName.IndexOf(".")));
+
+            if (Directory.Exists(tempPath))
+                Directory.Delete(tempPath, true);
+
+            Directory.CreateDirectory(tempPath);
+        }
+
+        private async void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            var env = await CoreWebView2Environment.CreateAsync(userDataFolder: tempPath);
+            await webView.EnsureCoreWebView2Async();
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)
@@ -58,15 +79,15 @@ namespace MSGFileToClassPrj
                     messageStream.Close();
                     message.Dispose();
 
-                    if (LoadRtfIntoRichTextBox(message.BodyByte))
+                    if (LoadRtfIntoRichTextBox(message))
                     {
                         result.Visibility = Visibility.Collapsed;
-                        myRichTextBox.Visibility = Visibility.Visible;
+                        webView.Visibility = Visibility.Visible;
                     }
                     else
                     {
                         result.Visibility = Visibility.Visible;
-                        myRichTextBox.Visibility = Visibility.Collapsed;
+                        webView.Visibility = Visibility.Collapsed;
 
                         result.Text += message.From + "\n";
                         result.Text += message.FromAdd + "\n";
@@ -75,10 +96,12 @@ namespace MSGFileToClassPrj
                         result.Text += "------------------------------------------\n";
                         result.Text += message.Subject + "\n";
                         result.Text += message.BodyText + "\n";
-                        result.Text += message.BodyRTF + "\n";
+                        //result.Text += message.BodyRTF + "\n";
                         result.Text += "------------------------------------------\n";
                         result.Text += message.Attachments[0].Filename + "\n";
                     }
+
+                    
 
                 }
             }
@@ -86,17 +109,43 @@ namespace MSGFileToClassPrj
             //result.Text = "";
         }
 
-        private bool LoadRtfIntoRichTextBox(byte[] rtfData)
+        private bool LoadRtfIntoRichTextBox(MSGMessageModel message)
         {
             try
             {
-                using (MemoryStream rtfStream = new MemoryStream(rtfData))
+                string MSGTempPath = tempPath + "\\" + Guid.NewGuid().ToString();
+                Directory.CreateDirectory(MSGTempPath);
+                TextReader stringReader = new StringReader(message.BodyRTF);
+                html = RtfPipe.Rtf.ToHtml(new RtfPipe.RtfSource(stringReader));
+                html.Replace("\\\"","\"");
+
+                foreach (MSGAttachmentModel setAttach in message.Attachments)
                 {
-                    TextRange textRange = new TextRange(myRichTextBox.Document.ContentStart, myRichTextBox.Document.ContentEnd);
-                    textRange.Load(rtfStream, System.Windows.DataFormats.Rtf);
+                    string AttachFileName = setAttach.Filename;
+
+                    if (String.IsNullOrEmpty(setAttach.Filename))
+                        AttachFileName = "Invalid File";
+
+                    string imgPath = MSGTempPath + "\\" + AttachFileName;
+
+                    FileInfo fileInfo = new FileInfo(imgPath);
+                    File.WriteAllBytes(fileInfo.FullName, setAttach.Data);
+                    
+                    if (!String.IsNullOrEmpty(html))
+                    {
+                        if (!string.IsNullOrEmpty(setAttach.ContentId) && html.Contains(setAttach.ContentId))
+                            html = html.Replace("cid:" + setAttach.ContentId, (fileInfo.FullName));
+                    }
                 }
+
+                string Path = MSGTempPath + "\\" + message.Subject + ".html";
+                FileInfo fileIn = new FileInfo(Path);
+                File.WriteAllText(fileIn.FullName, html);
+
+                webView.CoreWebView2?.Navigate("about:blank");
+                webView.CoreWebView2.Navigate(Path);
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 return false;
             }
@@ -111,6 +160,7 @@ namespace MSGFileToClassPrj
             SaveFileDialog openImportFile = new SaveFileDialog();
             openImportFile.Filter = $"{extension}|*{extension}";
             openImportFile.Title = msgFiles[0].Attachments[0].Filename;
+            openImportFile.FileName = msgFiles[0].Attachments[0].Filename;
 
             if (openImportFile.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
@@ -124,6 +174,10 @@ namespace MSGFileToClassPrj
             }
         }
 
-
+        private void Window_Closed(object sender, EventArgs e)
+        {
+            if (Directory.Exists(tempPath))
+                Directory.Delete(tempPath, true);
+        }
     }
 }

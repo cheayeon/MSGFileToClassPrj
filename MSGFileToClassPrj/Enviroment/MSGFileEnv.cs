@@ -27,6 +27,7 @@ namespace MSGFileToClassPrj.Enviroment
             PR_ATTACHMENT_LINKID = 0x7FFA,      // 첨부파일에 링크된 객체 유형
             PR_RENDERING_POSITION = 0x370B,     // 첨부파일의 렌더링 제어 (파일이 열리고 난 후에 데이터들의 위치를 정의하는듯. (ex/ 위아래 여백))
             PR_ATTACH_CONTENT_ID = 0x3712,
+            PR_ATTACHMENT_CONTACTPHOTO = 0x7FFF
         }
 
         // 수신자, 참조자 데이터들
@@ -63,6 +64,7 @@ namespace MSGFileToClassPrj.Enviroment
         public const string ATTACH_STORAGE_PREFIX = "__attach_version1.0_#";
         public const int ATTACH_BY_VALUE = 1;
         public const int ATTACH_EMBEDDED_MSG = 5;
+        public const int ATTACH_OLE = 6;
 
         //recipient constants
         // 수신자 및 참조자 정보

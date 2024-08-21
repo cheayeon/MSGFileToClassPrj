@@ -222,16 +222,16 @@ namespace MSGFileToClassPrj.Models
         /// <param name="streamByte"></param>
         /// <param name="streamEncoding"></param>
         /// <returns></returns>
-        public string ByteToString(byte[] streamByte, NativeCOMMethods.OutLookMAPI mapiType)
+        public string ByteToString(object streamByte, NativeCOMMethods.OutLookMAPI mapiType)
         {
             StreamReader streamReader = null;
             switch (mapiType)
             {
                 case NativeCOMMethods.OutLookMAPI.PT_STRING8:
-                    streamReader = new StreamReader(new MemoryStream(streamByte), Encoding.UTF8);
+                    streamReader = new StreamReader(new MemoryStream(streamByte as byte[]), Encoding.UTF8);
                     break;
                 case NativeCOMMethods.OutLookMAPI.PT_UNICODE:
-                    streamReader = new StreamReader(new MemoryStream(streamByte), Encoding.Unicode);
+                    streamReader = new StreamReader(new MemoryStream(streamByte as byte[]), Encoding.Unicode);
                     break;
             }
 

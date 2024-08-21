@@ -58,21 +58,21 @@ namespace MSGFileToClassPrj.Models
         /// 아웃룩 메일을 받은 사람들
         /// </summary>
         /// <value>아웃룩 메일을 받은 사람들의 list</value>
-        public List<RecipientModel> Recipients
+        public List<MSGRecipientModel> Recipients
         {
             get { return this.recipients; }
         }
-        private List<RecipientModel> recipients = new List<RecipientModel>();
+        private List<MSGRecipientModel> recipients = new List<MSGRecipientModel>();
 
         /// <summary>
         /// 아웃룩 메시지에 대한 첨부파일들
         /// </summary>
         /// <value>아웃룩 메시지에 첨부된 파일 list</value>
-        public List<AttachmentModel> Attachments
+        public List<MSGAttachmentModel> Attachments
         {
             get { return this.attachments; }
         }
-        private List<AttachmentModel> attachments = new List<AttachmentModel>();
+        private List<MSGAttachmentModel> attachments = new List<MSGAttachmentModel>();
 
         /// <summary>
         /// 아웃룩 메일 하위에 있는 메일들
@@ -181,7 +181,7 @@ namespace MSGFileToClassPrj.Models
                 //run specific load method depending on sub storage name prefix
                 if (storageStat.pwcsName.StartsWith(MSGFileEnv.RECIP_STORAGE_PREFIX))
                 {
-                    RecipientModel recipient = new RecipientModel(new MSGFileReadBaseModel(subStorage));
+                    MSGRecipientModel recipient = new MSGRecipientModel(new MSGFileReadBaseModel(subStorage));
                     this.recipients.Add(recipient);
                 }
                 else if (storageStat.pwcsName.StartsWith(MSGFileEnv.ATTACH_STORAGE_PREFIX))
@@ -205,7 +205,7 @@ namespace MSGFileToClassPrj.Models
         private void LoadAttachmentStorage(NativeCOMMethods.IStorage storage)
         {
             //create attachment from attachment storage
-            AttachmentModel attachment = new AttachmentModel(new MSGFileReadBaseModel(storage));
+            MSGAttachmentModel attachment = new MSGAttachmentModel(new MSGFileReadBaseModel(storage));
 
             //if attachment is a embeded msg handle differently than an normal attachment
             string fileAttachData = MSGFileEnv.FileAttachmentTag.PR_ATTACH_METHOD.ToString("X").Substring(4);
@@ -263,8 +263,9 @@ namespace MSGFileToClassPrj.Models
                             else
                             {
                                 getData = CLZF.decompressRTF(getData);
-
                                 this.BodyByte = getData;
+
+                                File.WriteAllBytes(@"C:\Users\KIM CHAE YEON\Downloads\extracted.rtf", getData);
                                 this._bodyRTF = Encoding.ASCII.GetString(getData);
                             }
 

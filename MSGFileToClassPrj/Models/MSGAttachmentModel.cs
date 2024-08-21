@@ -3,9 +3,30 @@ using System;
 
 namespace MSGFileToClassPrj.Models
 {
-    public class AttachmentModel : MSGFileReadBaseModel
+    public class MSGAttachmentModel : MSGFileReadBaseModel
     {
         #region Property(s)
+
+        private int _attachMethod;
+        /// <summary>
+        /// Gets the AttachMethod.
+        /// </summary>
+        /// <value>The AttachMethod.</value>
+        public int AttachMethod
+        {
+            get
+            {
+                return _attachMethod;
+            }
+        }
+
+        public bool IsContactPhoto { get; set; }
+        public bool isInBody { get; set; }
+
+        public bool IsInline
+        {
+            get { return _attachMethod == MSGFileEnv.ATTACH_OLE && isInBody; }
+        }
 
         private string _filename;
         /// <summary>
@@ -58,16 +79,17 @@ namespace MSGFileToClassPrj.Models
 
         #endregion
 
-        public AttachmentModel(MSGFileReadBaseModel msgFileReadBaseModel) 
+        public MSGAttachmentModel(MSGFileReadBaseModel msgFileReadBaseModel) 
                 : base(msgFileReadBaseModel.storage)
         {
+            this.isInBody = true;
             this.propHeaderSize = MSGFileEnv.PROPERTIES_STREAM_HEADER_ATTACH_OR_RECIP;
             this.SetMapiThisProperty();
         }
 
         public override void SetMapiThisProperty()
         {
-            AttachmentModel setModel = this;
+            MSGAttachmentModel setModel = this;
 
             foreach (var stream in streamStatistics)
             {
@@ -78,18 +100,18 @@ namespace MSGFileToClassPrj.Models
                     MSGFileEnv.FileAttachmentTag propTag = (MSGFileEnv.FileAttachmentTag)Int32.Parse(tagnum, System.Globalization.NumberStyles.HexNumber);
                     NativeCOMMethods.OutLookMAPI propType = (NativeCOMMethods.OutLookMAPI)ushort.Parse(stream.Key.Substring(16, 4), System.Globalization.NumberStyles.HexNumber);
 
-                    byte[] getData = GetStreamBytes(stream.Value);
+                    object getData = GetStreamBytes(stream.Value);
 
                     switch (propTag)
                     {
-                        case MSGFileEnv.FileAttachmentTag.PR_ATTACHMENT_LINKID:
-                            this._contentId = ByteToString(getData, propType);
-                            break;
+                        //case MSGFileEnv.FileAttachmentTag.PR_ATTACHMENT_LINKID:
+                        //    this._contentId = ByteToString(getData, propType);
+                        //    break;
                         case MSGFileEnv.FileAttachmentTag.PR_ATTACH_CONTENT_ID:
                             this._contentId = ByteToString(getData, propType);
                             break;
                         case MSGFileEnv.FileAttachmentTag.PR_ATTACH_DATA:
-                            this._data = getData;
+                            this._data = getData as byte[];
                             break;
                         case MSGFileEnv.FileAttachmentTag.PR_ATTACH_FILENAME:
                             this._filename = ByteToString(getData, propType);
@@ -98,13 +120,21 @@ namespace MSGFileToClassPrj.Models
                             this._filename = ByteToString(getData, propType);
                             break;
                         case MSGFileEnv.FileAttachmentTag.PR_ATTACH_METHOD:
-                            this._filename = ByteToString(getData, propType);
+                            this._attachMethod = int.Parse(ByteToString(getData, propType));
                             break;
+                        case MSGFileEnv.FileAttachmentTag.PR_ATTACHMENT_CONTACTPHOTO:
+                            var isContactPhoto = getData;
+                            if (isContactPhoto == null)
+                                IsContactPhoto = false;
+                            else
+                                IsContactPhoto = (bool)isContactPhoto;
+                            break;
+
                         case MSGFileEnv.FileAttachmentTag.PR_RENDERING_POSITION:
                             this._renderingPosisiton = int.Parse(ByteToString(getData, propType));
                             break;
                         default:
-                            datasDictionary.Add(tagnum, getData);
+                            datasDictionary.Add(tagnum, getData as byte[]);
                             encodingTypeDictionary.Add(tagnum, propType);
                             break;
                     }

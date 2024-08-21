@@ -4,7 +4,7 @@ using static MSGFileToClassPrj.Enviroment.MSGFileEnv;
 
 namespace MSGFileToClassPrj.Models
 {
-    public class RecipientModel : MSGFileReadBaseModel
+    public class MSGRecipientModel : MSGFileReadBaseModel
     {
         #region Property(s)
 
@@ -61,7 +61,7 @@ namespace MSGFileToClassPrj.Models
 
         #endregion
 
-        public RecipientModel(MSGFileReadBaseModel msgFileReadBaseModel)
+        public MSGRecipientModel(MSGFileReadBaseModel msgFileReadBaseModel)
                 : base(msgFileReadBaseModel.storage)
         {
             this.propHeaderSize = MSGFileEnv.PROPERTIES_STREAM_HEADER_ATTACH_OR_RECIP;
@@ -70,7 +70,7 @@ namespace MSGFileToClassPrj.Models
 
         public override void SetMapiThisProperty()
         {
-            RecipientModel setModel = this;
+            MSGRecipientModel setModel = this;
 
             foreach (var stream in streamStatistics)
             {
