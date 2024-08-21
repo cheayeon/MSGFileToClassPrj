@@ -132,6 +132,11 @@ namespace MSGFileToClassPrj.Models
                 return _bodyRTF;
             }
         }
+
+        /// <summary>
+        /// 임시 폴더
+        /// </summary>
+        public string TempPath { get; set; }
         #endregion
 
         #region Constructor(s)

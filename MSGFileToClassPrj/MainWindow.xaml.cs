@@ -25,7 +25,8 @@ namespace MSGFileToClassPrj
     /// </summary>
     public partial class MainWindow : Window
     {
-        List<MSGMessageModel> msgFiles = new List<MSGMessageModel>();
+        Dictionary<string, MSGMessageModel> msgFiles = new Dictionary<string, MSGMessageModel>();
+        MSGMessageModel nowShowMSG;
 
         public string tempPath { get; private set; }
 
@@ -63,46 +64,76 @@ namespace MSGFileToClassPrj
             {
                 foreach (string msgfile in openImportFile.FileNames)
                 {
-                    Stream messageStream = File.Open(msgfile, FileMode.Open, FileAccess.Read);
                     MSGMessageModel message;
-                    try
+                    if (msgFiles.ContainsKey(msgfile))
                     {
-                        message = new MSGMessageModel(messageStream);
-                        msgFiles.Add(message);
-                    }
-                    catch (Exception) {
-                        message = null;
-                        // microsoft에서 제공하는 msg 파일이 아니거나, 파일이 손상되었음.
-                        break;
-                    }
+                        message = msgFiles[msgfile];
+                        try
+                        {
+                            webView.CoreWebView2?.Navigate("about:blank");
+                            webView.CoreWebView2.Navigate(message.TempPath);
 
-                    messageStream.Close();
-                    message.Dispose();
+                            result.Visibility = Visibility.Collapsed;
+                            webView.Visibility = Visibility.Visible;
+                        }
+                        catch (Exception)
+                        {
+                            result.Visibility = Visibility.Visible;
+                            webView.Visibility = Visibility.Collapsed;
 
-                    if (LoadRtfIntoRichTextBox(message))
-                    {
-                        result.Visibility = Visibility.Collapsed;
-                        webView.Visibility = Visibility.Visible;
+                            result.Text += message.From + "\n";
+                            result.Text += message.FromAdd + "\n";
+                            result.Text += message.Recipients[0].DisplayName + "\n";
+                            result.Text += message.Recipients[0].Email + "\n";
+                            result.Text += "------------------------------------------\n";
+                            result.Text += message.Subject + "\n";
+                            result.Text += message.BodyText + "\n";
+                            //result.Text += message.BodyRTF + "\n";
+                            result.Text += "------------------------------------------\n";
+                            result.Text += message.Attachments[0].Filename + "\n";
+                        }
                     }
                     else
                     {
-                        result.Visibility = Visibility.Visible;
-                        webView.Visibility = Visibility.Collapsed;
+                        Stream messageStream = File.Open(msgfile, FileMode.Open, FileAccess.Read);
+                        try
+                        {
+                            message = new MSGMessageModel(messageStream);
+                            msgFiles.Add(msgfile, message);
+                        }
+                        catch (Exception) {
+                            message = null;
+                            // microsoft에서 제공하는 msg 파일이 아니거나, 파일이 손상되었음.
+                            break;
+                        }
 
-                        result.Text += message.From + "\n";
-                        result.Text += message.FromAdd + "\n";
-                        result.Text += message.Recipients[0].DisplayName + "\n";
-                        result.Text += message.Recipients[0].Email + "\n";
-                        result.Text += "------------------------------------------\n";
-                        result.Text += message.Subject + "\n";
-                        result.Text += message.BodyText + "\n";
-                        //result.Text += message.BodyRTF + "\n";
-                        result.Text += "------------------------------------------\n";
-                        result.Text += message.Attachments[0].Filename + "\n";
+                        messageStream.Close();
+                        message.Dispose();
+
+                        if (LoadRtfIntoRichTextBox(message))
+                        {
+                            result.Visibility = Visibility.Collapsed;
+                            webView.Visibility = Visibility.Visible;
+                        }
+                        else
+                        {
+                            result.Visibility = Visibility.Visible;
+                            webView.Visibility = Visibility.Collapsed;
+
+                            result.Text += message.From + "\n";
+                            result.Text += message.FromAdd + "\n";
+                            result.Text += message.Recipients[0].DisplayName + "\n";
+                            result.Text += message.Recipients[0].Email + "\n";
+                            result.Text += "------------------------------------------\n";
+                            result.Text += message.Subject + "\n";
+                            result.Text += message.BodyText + "\n";
+                            //result.Text += message.BodyRTF + "\n";
+                            result.Text += "------------------------------------------\n";
+                            result.Text += message.Attachments[0].Filename + "\n";
+                        }
                     }
 
-                    
-
+                    nowShowMSG = message;
                 }
             }
             //string xx = msgFiles[0].Recipients[0].Type.ToString();
@@ -117,7 +148,6 @@ namespace MSGFileToClassPrj
                 Directory.CreateDirectory(MSGTempPath);
                 TextReader stringReader = new StringReader(message.BodyRTF);
                 html = RtfPipe.Rtf.ToHtml(new RtfPipe.RtfSource(stringReader));
-                html.Replace("\\\"","\"");
 
                 foreach (MSGAttachmentModel setAttach in message.Attachments)
                 {
@@ -138,12 +168,13 @@ namespace MSGFileToClassPrj
                     }
                 }
 
-                string Path = MSGTempPath + "\\" + message.Subject + ".html";
-                FileInfo fileIn = new FileInfo(Path);
+                // 한번 저장한 후에 불러야만 그림등이 오류없이 보여짐.
+                message.TempPath = MSGTempPath + "\\" + message.Subject + ".html";
+                FileInfo fileIn = new FileInfo(message.TempPath);
                 File.WriteAllText(fileIn.FullName, html);
 
                 webView.CoreWebView2?.Navigate("about:blank");
-                webView.CoreWebView2.Navigate(Path);
+                webView.CoreWebView2.Navigate(message.TempPath);
             }
             catch (Exception e)
             {
@@ -155,20 +186,21 @@ namespace MSGFileToClassPrj
 
         private void Btn_byteSave_Click(object sender, EventArgs e)
         {
-            string extension = msgFiles[0].Attachments[0].Filename.Substring(msgFiles[0].Attachments[0].Filename.Contains(".") ?msgFiles[0].Attachments[0].Filename.LastIndexOf(".") : 0);
+            //첨부파일 저장용
+            string extension = nowShowMSG.Attachments[0].Filename.Substring(nowShowMSG.Attachments[0].Filename.Contains(".") ? nowShowMSG.Attachments[0].Filename.LastIndexOf(".") : 0);
 
             SaveFileDialog openImportFile = new SaveFileDialog();
             openImportFile.Filter = $"{extension}|*{extension}";
-            openImportFile.Title = msgFiles[0].Attachments[0].Filename;
-            openImportFile.FileName = msgFiles[0].Attachments[0].Filename;
+            openImportFile.Title = nowShowMSG.Attachments[0].Filename;
+            openImportFile.FileName = nowShowMSG.Attachments[0].Filename;
 
             if (openImportFile.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
                 if (openImportFile.FileName != "")
                 {
                     string dir = openImportFile.FileName; //경로 + 파일명            
-                    FileStream file = new FileStream(dir, FileMode.Create);
-                    file.Write(msgFiles[0].Attachments[0].Data, 0, msgFiles[0].Attachments[0].Data.Length);
+                    FileStream file = new FileStream(dir, FileMode.Create);
+                    file.Write(nowShowMSG.Attachments[0].Data, 0, nowShowMSG.Attachments[0].Data.Length);
                     file.Close();
                 }
             }
