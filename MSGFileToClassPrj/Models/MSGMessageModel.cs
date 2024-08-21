@@ -267,7 +267,7 @@ namespace MSGFileToClassPrj.Models
                             }
                             else
                             {
-                                getData = CLZF.decompressRTF(getData);
+                                getData = RtfDecompressor.DecompressRtf(getData);
                                 this.BodyByte = getData;
 
                                 File.WriteAllBytes(@"C:\Users\KIM CHAE YEON\Downloads\extracted.rtf", getData);
