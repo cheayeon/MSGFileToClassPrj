@@ -82,10 +82,10 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Enviroment\CLZF.cs" />
     <Compile Include="Enviroment\Mannager\ReferenceManager.cs" />
     <Compile Include="Enviroment\MSGFileEnv.cs" />
     <Compile Include="Enviroment\NativeCOMMethods.cs" />
+    <Compile Include="Enviroment\RtfDecompressor.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>

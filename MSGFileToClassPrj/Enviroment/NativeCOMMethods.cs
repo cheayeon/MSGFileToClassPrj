@@ -17,8 +17,8 @@ namespace MSGFileToClassPrj.Enviroment
         [DllImport("ole32.DLL")]
         public static extern int CreateILockBytesOnHGlobal(IntPtr hGlobal, bool fDeleteOnRelease, out ILockBytes ppLkbyt);
 
-        //[DllImport("ole32.DLL", CharSet = CharSet.Auto, PreserveSig = false)]
-        //public static extern IntPtr GetHGlobalFromILockBytes(ILockBytes pLockBytes);
+        [DllImport("ole32.DLL", CharSet = CharSet.Auto, PreserveSig = false)]
+        public static extern IntPtr GetHGlobalFromILockBytes(ILockBytes pLockBytes);
 
         [DllImport("ole32.DLL")]
         public static extern int StgIsStorageILockBytes(ILockBytes plkbyt);

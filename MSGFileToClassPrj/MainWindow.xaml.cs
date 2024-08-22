@@ -130,8 +130,10 @@ namespace MSGFileToClassPrj
                             //result.Text += message.BodyRTF + "\n";
                             result.Text += "------------------------------------------\n";
                             result.Text += message.Attachments[0].Filename + "\n";
+
                         }
                     }
+                    result.Text += message.Dates.ToString();
 
                     nowShowMSG = message;
                 }

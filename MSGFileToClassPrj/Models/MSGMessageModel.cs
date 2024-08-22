@@ -133,6 +133,35 @@ namespace MSGFileToClassPrj.Models
             }
         }
 
+        private DateTime _date;
+        /// <summary>
+        /// 메일이 도착한 날짜_property에 있는 정보
+        /// </summary>
+        public DateTime Dates
+        {
+            get
+            {
+                if(_date.ToBinary() == 0)
+                {
+                    long getType = 0;
+                    
+                    try
+                    {
+                        var xxx = GetMapiPropertyFromPropertyByte(MSGFileEnv.FileMessageTag.PR_ORIGINAL_DELIVERY_TIME.ToString("X").Substring(4));
+                        getType = (long)xxx;
+                    }
+                    catch (Exception)
+                    {
+                        getType = 3;
+                    }
+
+                    _date = DateTime.FromFileTime(getType);
+                }
+
+                return _date;
+            }
+        }
+
         /// <summary>
         /// 임시 폴더
         /// </summary>

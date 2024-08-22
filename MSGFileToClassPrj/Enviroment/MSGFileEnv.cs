@@ -49,6 +49,7 @@ namespace MSGFileToClassPrj.Enviroment
             PR_RTF_COMPRESSED = 0x1009, // RTF로 암호화된 내용
             PR_SENDER_NAME = 0x0C1A,    // 발신자 이름
             PR_SENDER_EMAIL = 0x0C1F,   // 발신자 메일 주소
+            PR_ORIGINAL_DELIVERY_TIME = 0x0E06,   // 메시지 전송시간 
         }
 
         public enum RecipientType

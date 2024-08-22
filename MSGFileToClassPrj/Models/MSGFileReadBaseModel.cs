@@ -108,7 +108,7 @@ namespace MSGFileToClassPrj.Models
             }
         }
 
-        #region
+        #region 파일의 값을 변수에 넣어줄때 호출
         /// <summary>
         /// 데이터를 실제 변수에 넣어줄때 호출하길....
         /// </summary>
@@ -219,9 +219,9 @@ namespace MSGFileToClassPrj.Models
         /// <summary>
         /// Byte로 구해진 값을 string 값으로 바꿔주는 코드
         /// </summary>
-        /// <param name="streamByte"></param>
-        /// <param name="streamEncoding"></param>
-        /// <returns></returns>
+        /// <param name="streamByte">Byte 값</param>
+        /// <param name="mapiType">Byte의 인코딩된 정보</param>
+        /// <returns>Byte를 String으로 바꾼 값</returns>
         public string ByteToString(object streamByte, NativeCOMMethods.OutLookMAPI mapiType)
         {
             StreamReader streamReader = null;
@@ -249,8 +249,8 @@ namespace MSGFileToClassPrj.Models
         /// <summary>
         /// 파일의 데이터 위치를 사용해 값을 가져오기
         /// </summary>
-        /// <param name="streamStatStg"></param>
-        /// <returns></returns>
+        /// <param name="streamStatStg">파일 데이터의 실제 주소정보</param>
+        /// <returns>해당 주소에 접근해 얻은 실제 데이터값</returns>
         public byte[] GetStreamBytes(ComTypes.STATSTG streamStatStg)
         {
             byte[] iStreamContent;
@@ -284,7 +284,7 @@ namespace MSGFileToClassPrj.Models
         /// property stream에 저장된 값을 가져옴
         /// </summary>
         /// <param name="propIdentifier">MSG 환경변수의 헥사 코드 string (4Byte)</param>
-        /// <returns>The value of the MAPI property or null if not found.</returns>
+        /// <returns>프로퍼티에서 찾은 값 / 없으면 null</returns>
         public object GetMapiPropertyFromPropertyByte(string propIdentifier)
         {
             //propertys 가 dictionary에 없으면 null
@@ -293,40 +293,43 @@ namespace MSGFileToClassPrj.Models
                 return null;
             }
 
-            //get the raw bytes for the property stream
+            //property stream에서 raw 데이터 가져오기
             byte[] propBytes = datasDictionary[MSGFileEnv.PROPERTIES_STREAM];
 
-            //iterate over property stream in 16 byte chunks starting from end of header
+            // 헤더를 제외한 내용을 16바이트 단위로 호출
             for (int i = this.propHeaderSize; i < propBytes.Length; i = i + 16)
             {
-                //get property type located in the 1st and 2nd bytes as a unsigned short value
+                // 해당 값이 어떤 자료형을 가졌는지 가져온다.
                 ushort propType = BitConverter.ToUInt16(propBytes, i);
 
-                //get property identifer located in 3nd and 4th bytes as a hexdecimal string
+                // 값에 대한 환경변수 Hex코드를 가져온다.
                 byte[] propIdent = new byte[] { propBytes[i + 3], propBytes[i + 2] };
                 string propIdentString = BitConverter.ToString(propIdent).Replace("-", "");
 
-                //if this is not the property being gotten continue to next property
+                // 찾고있는 데이터가 아니면 다음것을 확인
                 if (propIdentString != propIdentifier)
                 {
                     continue;
                 }
 
-                //depending on prop type use method to get property value
+                // 데이터만 가져오기 위해서 값에대한 기본 정보를 제외
                 switch (propType)
                 {
-                    case 2:
+                    case 2: // 16 bit int
                         return BitConverter.ToInt16(propBytes, i + 8);
 
-                    case 3:
+                    case 3: // 32 bit int
                         return BitConverter.ToInt32(propBytes, i + 8);
+
+                    case 64: // 64 bit int
+                        return BitConverter.ToInt64(propBytes, i + 8);
 
                     default:
                         throw new ApplicationException("MAPI property has an unsupported type and can not be retrieved.");
                 }
             }
 
-            //property not found return null
+            // 프로퍼티에 해당 내용이 없으면 null 반환
             return null;
         }
 
